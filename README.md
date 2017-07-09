@@ -1,2 +1,2 @@
-# jenkins_pipeline_scripts
-jenkins_pipeline_scripts
+# Jenkins Pipeline Scripts
+This repository has working sample Jenkins pipeline scripts
