@@ -1,0 +1,56 @@
+//Requires: Credentials Binding Plugin and HTTP Request Plugin
+node ('master') {
+    credentialsId = '13453ef7-5374-4813-a750-ee81e0200380'
+    withCredentials([[$class: 'UsernamePasswordMultiBinding', 
+                  credentialsId: credentialsId, 
+                  usernameVariable: 'BBS_USERNAME', 
+                  passwordVariable: 'BBS_PASSWORD']]) { 
+    
+    def sha1Id = '04444629a9ab29b0fcaa3d56dd2460f3fd41642c'
+    
+    restURL = "http://${BBS_USERNAME}:${BBS_PASSWORD}@192.168.1.11:7990/rest/build-status/1.0/commits/${sha1Id}"
+        
+    def buildState = 'SUCCESSFUL'
+    def buildKey = 'BUILD'
+    def buildName = 'Build Step'
+    def buildDescription = "Performed Build"
+    postHttpRequest(restURL, buildState, buildKey, buildName, buildDescription)
+    
+    buildState = 'FAILED'
+    buildKey = 'SaveArtifact'
+    buildName = 'Save Artifact Step'
+    buildDescription = 'Saved Build Artifacts'
+    postHttpRequest(restURL, buildState, buildKey, buildName, buildDescription)
+    
+    }
+}
+
+def getHttpRequest(restURL) {
+    def response = httpRequest acceptType: 'APPLICATION_JSON', contentType:'APPLICATION_JSON', authentication: credentialsId, httpMode: 'GET', url: restURL
+    println("Status: "+response.status)
+    println("Content: "+response.content)
+}
+
+def postHttpRequest(String restURL, 
+                    String buildState, 
+                    String buildKey, 
+                    String buildName, 
+                    String buildDescription) {
+    def data = 
+        [
+        "state": buildState,
+        "key": buildKey,
+        "name": buildName,
+        "url": 'http://jenkins/job/url/5',
+        "description": buildDescription
+        ]
+        //"url": env.BUILD_URL,    
+    def response = httpRequest acceptType: 'APPLICATION_JSON', contentType:'APPLICATION_JSON', authentication: credentialsId, httpMode: 'POST', requestBody: toJson(data), url: restURL
+    
+    println("Status: "+response.status)
+    println("Content: "+response.content)
+}
+
+def toJson (Map input) {
+    return groovy.json.JsonOutput.toJson(input)
+}
